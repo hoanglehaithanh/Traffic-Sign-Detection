@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+*.avi
+*.MTS
+source/*.png
+
 # Distribution / packaging
 .Python
 env/
