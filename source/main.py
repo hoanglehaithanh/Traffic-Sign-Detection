@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from math import sqrt
 from skimage.feature import blob_dog, blob_log, blob_doh
 import imutils
-
+import argparse
 
 
 
@@ -68,9 +68,9 @@ def contourIsSign(perimeter, centroid, threshold):
 	temp = sum((1 - s) for s in signature)
 	temp = temp / len(signature)
 	if temp < threshold: # is  the sign
-		return True, max_value
+		return True, max_value + 2
 	else: 				# is not the sign
-		return False, max_value
+		return False, max_value + 2
 
 #crop sign 
 def cropContour(image, center, max_distance):
@@ -127,8 +127,8 @@ def showsigns(signs, count):
 		cv2.imwrite(str(count)+'_'+str(c)+'.png', s)
 		c = c + 1
 
-def main(file_name):
-	vidcap = cv2.VideoCapture(file_name)
+def main(args):
+	vidcap = cv2.VideoCapture(args.file_name)
 
 	fps = vidcap.get(cv2.CAP_PROP_FPS)
 	width = vidcap.get(3)  # float
@@ -138,10 +138,8 @@ def main(file_name):
 	fourcc = cv2.VideoWriter_fourcc(*'XVID')
 	out = cv2.VideoWriter('output.avi',fourcc, fps , (640,480))
 
-	count = 0
 	success = True
-	min_size_components = 350	          # parameter
-	similitary_contour_with_circle = 0.55   # parameter
+	similitary_contour_with_circle = 0.65   # parameter
 	count = 0
 	while True:
 		success,frame = vidcap.read()
@@ -151,9 +149,9 @@ def main(file_name):
 			print("FINISHED")
 			break
 		count = count + 1
-		signs, image = localization(frame, min_size_components, similitary_contour_with_circle)
+		signs, image = localization(frame, args.min_size_components, args.similitary_contour_with_circle)
 		out.write(image)
-		#showsigns(signs, count)
+		showsigns(signs, count)
 		#if count == 2000:                    
 			# signs = localization(image, min_size_components, similitary_contour_with_circle)
 			# showsigns([image], count)
@@ -167,4 +165,30 @@ def main(file_name):
 	print("Finish {} frames".format(count))
 	return 
 
-main('./Videos/MVI_1049.avi')
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="NLP Assignment Command Line")
+    
+    parser.add_argument(
+      '--file_name',
+      default= "./Videos/MVI_1049.avi",
+      help= "Video to be analyzed"
+      )
+    
+    parser.add_argument(
+      '--min_size_components',
+      type = int,
+      default= 300,
+      help= "Min size component to be reserved"
+      )
+
+    
+    parser.add_argument(
+      '--similitary_contour_with_circle',
+      type = float,
+      default= 0.65,
+      help= "Similitary to a circle"
+      )
+    
+    args = parser.parse_args()
+    main(args)
