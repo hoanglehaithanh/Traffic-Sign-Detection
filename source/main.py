@@ -134,7 +134,8 @@ def findLargestSign(image, contours, threshold, distance_theshold):
             sign = cropSign(image,coordinate)
     return sign, coordinate
 
-def findSigns(image, contours, threshold):
+
+def findSigns(image, contours, threshold, distance_theshold):
     signs = []
     coordinates = []
     for c in contours:
@@ -145,7 +146,7 @@ def findSigns(image, contours, threshold):
         cX = int(M["m10"] / M["m00"])
         cY = int(M["m01"] / M["m00"])
         is_sign, max_distance = contourIsSign(c, [cX, cY], 1-threshold)
-        if is_sign:
+        if is_sign and max_distance > distance_theshold:
             sign = cropContour(image, [cX, cY], max_distance)
             signs.append(sign)
             coordinate = np.reshape(c, [-1,2])
@@ -166,10 +167,21 @@ def localization(image, min_size_components, similitary_contour_with_circle, mod
 
     cv2.imshow('BINARY IMAGE', binary_image)
     contours = findContour(binary_image)
-    #signs, coordinates = findSigns(image, contours, similitary_contour_with_circle)
-    sign, coordinate = findLargestSign(original_image, contours, similitary_contour_with_circle, 10)
+    signs, coordinates = findSigns(image, contours, similitary_contour_with_circle, 15)
+    #sign, coordinate = findLargestSign(original_image, contours, similitary_contour_with_circle, 15)
     text = ""
     sign_type = -1
+    i = 0
+    coordinate = None
+    sign = None
+    for s in signs:
+        s = cropSign(image,coordinates[i])
+        if len(s) > 0 and getLabel(model, s) == 7:
+            sign = s
+            coordinate = coordinates[i]
+            break
+        i+=1
+
     if sign is not None:
         sign_type = getLabel(model, sign)
         sign_type = sign_type if sign_type <= 8 else 8
@@ -260,7 +272,9 @@ def main(args):
             break
         width = frame.shape[1]
         height = frame.shape[0]
-        frame = cv2.resize(frame, (640,int(height/(width/640))))
+        #frame = cv2.resize(frame, (640,int(height/(width/640))))
+        frame = cv2.resize(frame, (640,480))
+
         print("Frame:{}".format(count))
         #image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         coordinate, image, sign_type, text = localization(frame, args.min_size_components, args.similitary_contour_with_circle, model, count, current_sign)
@@ -274,7 +288,12 @@ def main(args):
             left = int(coordinate[0][0]*1.05)
             bottom = int(coordinate[1][1]*0.95)
             right = int(coordinate[1][0]*0.95)
-            position = [count, sign_type if sign_type <= 8 else 8, coordinate[0][0], coordinate[0][1], coordinate[1][0], coordinate[1][1]]
+            if sign_type == 7:
+                position = [count, sign_type if sign_type <= 8 else 8, coordinate[0][0], coordinate[0][1], coordinate[1][0], coordinate[1][1]]
+                cv2.rectangle(image, coordinate[0],coordinate[1], (0, 255, 0), 1)
+                font = cv2.FONT_HERSHEY_PLAIN
+                cv2.putText(image,text,(coordinate[0][0], coordinate[0][1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
+
             tl = [left, top]
             br = [right,bottom]
             print(tl, br)
@@ -290,10 +309,6 @@ def main(args):
             roiHist = cv2.calcHist([roi], [0], None, [16], [0, 180])
             roiHist = cv2.normalize(roiHist, roiHist, 0, 255, cv2.NORM_MINMAX)
             roiBox = (tl[0], tl[1], br[0], br[1])
-
-            cv2.rectangle(image, coordinate[0],coordinate[1], (0, 255, 0), 1)
-            font = cv2.FONT_HERSHEY_PLAIN
-            cv2.putText(image,text,(coordinate[0][0], coordinate[0][1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
 
         elif current_sign:
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -316,23 +331,26 @@ def main(args):
                 current_size = size
 
             if sign_type > 0:
-                cv2.rectangle(image, coordinate[0],coordinate[1], (0, 255, 0), 1)
-                font = cv2.FONT_HERSHEY_PLAIN
-                cv2.putText(image,text,(coordinate[0][0], coordinate[0][1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
                 top = int(coordinate[0][1])
                 left = int(coordinate[0][0])
                 bottom = int(coordinate[1][1])
                 right = int(coordinate[1][0])
-                position = [count, sign_type if sign_type <= 8 else 8, left, top, right, bottom]
+                if sign_type == 7:
+                    position = [count, sign_type if sign_type <= 8 else 8, left, top, right, bottom]
+                    cv2.rectangle(image, coordinate[0],coordinate[1], (0, 255, 0), 1)
+                    font = cv2.FONT_HERSHEY_PLAIN
+                    cv2.putText(image,text,(coordinate[0][0], coordinate[0][1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
             elif current_sign:
-                cv2.rectangle(image, (tl[0], tl[1]),(br[0], br[1]), (0, 255, 0), 1)
-                font = cv2.FONT_HERSHEY_PLAIN
-                cv2.putText(image,current_text,(tl[0], tl[1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
-                position = [count, sign_type if sign_type <= 8 else 8, tl[0], tl[1], br[0], br[1]]
+                if sign_type == 7:
+                    position = [count, sign_type if sign_type <= 8 else 8, tl[0], tl[1], br[0], br[1]]
+                    cv2.rectangle(image, (tl[0], tl[1]),(br[0], br[1]), (0, 255, 0), 1)
+                    font = cv2.FONT_HERSHEY_PLAIN
+                    cv2.putText(image,current_text,(tl[0], tl[1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
 
         if current_sign:
-            sign_count += 1
-            coordinates.append(position)
+            if current_sign == 7:
+                sign_count += 1
+                coordinates.append(position)
 
         cv2.imshow('Result', image)
         count = count + 1
@@ -340,9 +358,9 @@ def main(args):
         out.write(image)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-    file.write("{}\n".format(sign_count))
+    file.write("{}".format(sign_count))
     for pos in coordinates:
-        file.write("{} {} {} {} {} {}\n".format(pos[0],pos[1],pos[2],pos[3],pos[4], pos[5]))
+        file.write("\n{} {} {} {} {} {}".format(pos[0],pos[1],pos[2],pos[3],pos[4], pos[5]))
     print("Finish {} frames".format(count))
     file.close()
     return 
@@ -360,7 +378,7 @@ if __name__ == '__main__':
     parser.add_argument(
       '--min_size_components',
       type = int,
-      default= 200,
+      default= 300,
       help= "Min size component to be reserved"
       )
 

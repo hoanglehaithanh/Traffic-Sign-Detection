@@ -15,12 +15,14 @@ def load_traffic_dataset():
     for sign_type in range(CLASS_NUMBER):
         sign_list = listdir("./Training/data/{}".format(sign_type))
         for sign_file in sign_list:
-            path = "./Training/data/{}/{}".format(sign_type,sign_file)
-            img = cv2.imread(path,0)
-            img = cv2.resize(img, (SIZE, SIZE))
-            img = np.reshape(img, [SIZE, SIZE])
-            dataset.append(img)
-            labels.append(sign_type)
+            if '.png' in sign_file:
+                path = "./Training/data/{}/{}".format(sign_type,sign_file)
+                print(path)
+                img = cv2.imread(path,0)
+                img = cv2.resize(img, (SIZE, SIZE))
+                img = np.reshape(img, [SIZE, SIZE])
+                dataset.append(img)
+                labels.append(sign_type)
     return np.array(dataset), np.array(labels)
 
 
