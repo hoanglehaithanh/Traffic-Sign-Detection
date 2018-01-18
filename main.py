@@ -167,20 +167,12 @@ def localization(image, min_size_components, similitary_contour_with_circle, mod
 
     cv2.imshow('BINARY IMAGE', binary_image)
     contours = findContour(binary_image)
-    signs, coordinates = findSigns(image, contours, similitary_contour_with_circle, 15)
-    #sign, coordinate = findLargestSign(original_image, contours, similitary_contour_with_circle, 15)
+    #signs, coordinates = findSigns(image, contours, similitary_contour_with_circle, 15)
+    sign, coordinate = findLargestSign(original_image, contours, similitary_contour_with_circle, 15)
+    
     text = ""
     sign_type = -1
     i = 0
-    coordinate = None
-    sign = None
-    for s in signs:
-        s = cropSign(image,coordinates[i])
-        if len(s) > 0 and getLabel(model, s) == 7:
-            sign = s
-            coordinate = coordinates[i]
-            break
-        i+=1
 
     if sign is not None:
         sign_type = getLabel(model, sign)
@@ -288,11 +280,11 @@ def main(args):
             left = int(coordinate[0][0]*1.05)
             bottom = int(coordinate[1][1]*0.95)
             right = int(coordinate[1][0]*0.95)
-            if sign_type == 7:
-                position = [count, sign_type if sign_type <= 8 else 8, coordinate[0][0], coordinate[0][1], coordinate[1][0], coordinate[1][1]]
-                cv2.rectangle(image, coordinate[0],coordinate[1], (0, 255, 0), 1)
-                font = cv2.FONT_HERSHEY_PLAIN
-                cv2.putText(image,text,(coordinate[0][0], coordinate[0][1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
+
+            position = [count, sign_type if sign_type <= 8 else 8, coordinate[0][0], coordinate[0][1], coordinate[1][0], coordinate[1][1]]
+            cv2.rectangle(image, coordinate[0],coordinate[1], (0, 255, 0), 1)
+            font = cv2.FONT_HERSHEY_PLAIN
+            cv2.putText(image,text,(coordinate[0][0], coordinate[0][1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
 
             tl = [left, top]
             br = [right,bottom]
@@ -335,22 +327,20 @@ def main(args):
                 left = int(coordinate[0][0])
                 bottom = int(coordinate[1][1])
                 right = int(coordinate[1][0])
-                if sign_type == 7:
-                    position = [count, sign_type if sign_type <= 8 else 8, left, top, right, bottom]
-                    cv2.rectangle(image, coordinate[0],coordinate[1], (0, 255, 0), 1)
-                    font = cv2.FONT_HERSHEY_PLAIN
-                    cv2.putText(image,text,(coordinate[0][0], coordinate[0][1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
+
+                position = [count, sign_type if sign_type <= 8 else 8, left, top, right, bottom]
+                cv2.rectangle(image, coordinate[0],coordinate[1], (0, 255, 0), 1)
+                font = cv2.FONT_HERSHEY_PLAIN
+                cv2.putText(image,text,(coordinate[0][0], coordinate[0][1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
             elif current_sign:
-                if sign_type == 7:
-                    position = [count, sign_type if sign_type <= 8 else 8, tl[0], tl[1], br[0], br[1]]
-                    cv2.rectangle(image, (tl[0], tl[1]),(br[0], br[1]), (0, 255, 0), 1)
-                    font = cv2.FONT_HERSHEY_PLAIN
-                    cv2.putText(image,current_text,(tl[0], tl[1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
+                position = [count, sign_type if sign_type <= 8 else 8, tl[0], tl[1], br[0], br[1]]
+                cv2.rectangle(image, (tl[0], tl[1]),(br[0], br[1]), (0, 255, 0), 1)
+                font = cv2.FONT_HERSHEY_PLAIN
+                cv2.putText(image,current_text,(tl[0], tl[1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
 
         if current_sign:
-            if current_sign == 7:
-                sign_count += 1
-                coordinates.append(position)
+            sign_count += 1
+            coordinates.append(position)
 
         cv2.imshow('Result', image)
         count = count + 1
