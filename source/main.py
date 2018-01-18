@@ -248,6 +248,10 @@ def main(args):
     current_sign = None
     current_text = ""
     current_size = 0
+    sign_count = 0
+    coordinates = []
+    position = []
+    file = open("result.txt", "w")
     while True:
         success,frame = vidcap.read()
         if not success:
@@ -258,7 +262,6 @@ def main(args):
         frame = cv2.resize(frame, (640,int(height/(width/640))))
         print("Frame:{}".format(count))
         #image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        count = count + 1
         coordinate, image, sign_type, text = localization(frame, args.min_size_components, args.similitary_contour_with_circle, model, count, current_sign)
         print("Sign:{}".format(sign_type))
         if sign_type > 0 and (not current_sign or sign_type != current_sign):
@@ -268,6 +271,7 @@ def main(args):
             left = int(coordinate[0][0]*1.05)
             bottom = int(coordinate[1][1]*0.95)
             right = int(coordinate[1][0]*0.95)
+            position = [count, sign_type, left, top, right, bottom]
             tl = [left, top]
             br = [right,bottom]
             print(tl, br)
@@ -302,7 +306,7 @@ def main(args):
             size = math.sqrt(pow((tl[0]-br[0]),2) +pow((tl[1]-br[1]),2))
             print(size)
 
-            if  current_size < 1 or size / current_size > 30 or math.fabs((tl[0]-br[0])/(tl[1]-br[1])) > 2 or math.fabs((tl[0]-br[0])/(tl[1]-br[1])) < 0.5:
+            if  current_size < 1 or size < 1 or size / current_size > 30 or math.fabs((tl[0]-br[0])/(tl[1]-br[1])) > 2 or math.fabs((tl[0]-br[0])/(tl[1]-br[1])) < 0.5:
                 current_sign = None
                 print("Stop tracking")
             else:
@@ -312,18 +316,32 @@ def main(args):
                 cv2.rectangle(image, coordinate[0],coordinate[1], (0, 255, 0), 1)
                 font = cv2.FONT_HERSHEY_PLAIN
                 cv2.putText(image,text,(coordinate[0][0], coordinate[0][1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
-            else:
+                top = int(coordinate[0][1])
+                left = int(coordinate[0][0])
+                bottom = int(coordinate[1][1])
+                right = int(coordinate[1][0])
+                position = [count, sign_type, left, top, right, bottom]
+            elif current_sign:
                 cv2.rectangle(image, (tl[0], tl[1]),(br[0], br[1]), (0, 255, 0), 1)
                 font = cv2.FONT_HERSHEY_PLAIN
                 cv2.putText(image,current_text,(tl[0], tl[1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
+                position = [count, sign_type, tl[0], tl[1], br[0], br[1]]
+
+        if current_sign:
+            sign_count += 1
+            coordinates.append(position)
 
         cv2.imshow('Result', image)
+        count = count + 1
         #Write to video
         out.write(image)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-
+    file.write("{}\n".format(sign_count))
+    for pos in coordinates:
+        file.write("{} {} {} {} {} {}\n".format(pos[0],pos[1],pos[2],pos[3],pos[4], pos[5]))
     print("Finish {} frames".format(count))
+    file.close()
     return 
 
 
