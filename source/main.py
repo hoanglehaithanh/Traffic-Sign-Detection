@@ -274,7 +274,7 @@ def main(args):
             left = int(coordinate[0][0]*1.05)
             bottom = int(coordinate[1][1]*0.95)
             right = int(coordinate[1][0]*0.95)
-            position = [count, sign_type if sign_type <= 8 else 8, left, top, right, bottom]
+            position = [count, sign_type if sign_type <= 8 else 8, coordinate[0][0], coordinate[0][1], coordinate[1][0], coordinate[1][1]]
             tl = [left, top]
             br = [right,bottom]
             print(tl, br)
