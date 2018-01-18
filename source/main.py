@@ -162,7 +162,7 @@ def localization(image, min_size_components, similitary_contour_with_circle, mod
 
     binary_image = cv2.bitwise_and(binary_image,binary_image, mask=remove_other_color(image))
 
-    binary_image = remove_line(binary_image)
+    #binary_image = remove_line(binary_image)
 
     cv2.imshow('BINARY IMAGE', binary_image)
     contours = findContour(binary_image)
@@ -172,6 +172,7 @@ def localization(image, min_size_components, similitary_contour_with_circle, mod
     sign_type = -1
     if sign is not None:
         sign_type = getLabel(model, sign)
+        sign_type = sign_type if sign_type <= 8 else 8
         text = SIGNS[sign_type]
         cv2.imwrite(str(count)+'_'+text+'.png', sign)
 
@@ -251,7 +252,7 @@ def main(args):
     sign_count = 0
     coordinates = []
     position = []
-    file = open("result.txt", "w")
+    file = open("Output.txt", "w")
     while True:
         success,frame = vidcap.read()
         if not success:
@@ -263,6 +264,8 @@ def main(args):
         print("Frame:{}".format(count))
         #image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         coordinate, image, sign_type, text = localization(frame, args.min_size_components, args.similitary_contour_with_circle, model, count, current_sign)
+        if coordinate is not None:
+            cv2.rectangle(image, coordinate[0],coordinate[1], (255, 255, 255), 1)
         print("Sign:{}".format(sign_type))
         if sign_type > 0 and (not current_sign or sign_type != current_sign):
             current_sign = sign_type
@@ -271,7 +274,7 @@ def main(args):
             left = int(coordinate[0][0]*1.05)
             bottom = int(coordinate[1][1]*0.95)
             right = int(coordinate[1][0]*0.95)
-            position = [count, sign_type, left, top, right, bottom]
+            position = [count, sign_type if sign_type <= 8 else 8, left, top, right, bottom]
             tl = [left, top]
             br = [right,bottom]
             print(tl, br)
@@ -320,12 +323,12 @@ def main(args):
                 left = int(coordinate[0][0])
                 bottom = int(coordinate[1][1])
                 right = int(coordinate[1][0])
-                position = [count, sign_type, left, top, right, bottom]
+                position = [count, sign_type if sign_type <= 8 else 8, left, top, right, bottom]
             elif current_sign:
                 cv2.rectangle(image, (tl[0], tl[1]),(br[0], br[1]), (0, 255, 0), 1)
                 font = cv2.FONT_HERSHEY_PLAIN
                 cv2.putText(image,current_text,(tl[0], tl[1] -15), font, 1,(0,0,255),2,cv2.LINE_4)
-                position = [count, sign_type, tl[0], tl[1], br[0], br[1]]
+                position = [count, sign_type if sign_type <= 8 else 8, tl[0], tl[1], br[0], br[1]]
 
         if current_sign:
             sign_count += 1
@@ -365,7 +368,7 @@ if __name__ == '__main__':
     parser.add_argument(
       '--similitary_contour_with_circle',
       type = float,
-      default= 0.55,
+      default= 0.65,
       help= "Similitary to a circle"
       )
     
