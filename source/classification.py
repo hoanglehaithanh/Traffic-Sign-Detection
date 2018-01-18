@@ -143,7 +143,7 @@ def training():
 def getLabel(model, data):
     gray = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY)
     img = [cv2.resize(gray,(SIZE,SIZE))]
-    print(np.array(img).shape)
+    #print(np.array(img).shape)
     img_deskewed = list(map(deskew, img))
     hog = get_hog()
     hog_descriptors = np.array([hog.compute(img_deskewed[0])])
