@@ -63,7 +63,7 @@ optional arguments:
                         Similitary to a circle
 ```
 ### 5. Result
-~[](images/demo.gif)
+![](images/demo.gif)
 ### 6. Disavantages
 - Static image processing, this means parameters must be updated for each videos with different lighting conditions
 - The accuracy of the detection phase is not high, still miss signs or detect wrong areas.
