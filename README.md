@@ -1,5 +1,7 @@
 # Traffic signs detection and classification
 
+### A new version using SSD will be released this summer for anyone need higher accuracy detection method. Stay tuned for new update!
+
 ### 1. Description ###
 This project is a traffic signs detection and classification system on videos using OpenCV.
 The detection phase uses Image Processing techniques that create contours on each video frame and find all ellipses or circles among those contours. They are marked as candidates for traffic signs.
