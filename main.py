@@ -361,7 +361,7 @@ if __name__ == '__main__':
     
     parser.add_argument(
       '--file_name',
-      default= "./Videos/MVI_1049.avi",
+      default= "./MVI_1049.avi",
       help= "Video to be analyzed"
       )
     
