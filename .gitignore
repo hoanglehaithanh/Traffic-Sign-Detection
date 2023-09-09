@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.vscode/
+data_svn.dat
+Output.txt
 
 # C extensions
 *.so
