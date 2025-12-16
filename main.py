@@ -133,6 +133,10 @@ def findLargestSign(image, contours, threshold, distance_theshold):
     coordinate = None
     sign = None
     for c in contours:
+        if len(c) == 0:
+            print("Empty contour detected.")
+            return None, None
+
         M = cv2.moments(c)
         if M["m00"] == 0:
             continue
@@ -180,10 +184,12 @@ def localization(image, min_size_components, similitary_contour_with_circle, mod
         binary_image, binary_image, mask=remove_other_color(image))
 
     # binary_image = remove_line(binary_image)
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
 
     cv2.imshow('BINARY IMAGE', binary_image)
-    contours = findContour(binary_image)
-    # signs, coordinates = findSigns(image, contours, similitary_contour_with_circle, 15)
+    contours, hierarchy = cv2.findContours(binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    #signs, coordinates = findSigns(image, contours, similitary_contour_with_circle, 15)
     sign, coordinate = findLargestSign(
         original_image, contours, similitary_contour_with_circle, 15)
 
@@ -344,7 +350,7 @@ def main(args):
             # apply cam shift to the back projection, convert the
             # points to a bounding box, and then draw them
             (r, roiBox) = cv2.CamShift(backProj, roiBox, termination)
-            pts = np.int0(cv2.boxPoints(r))
+            pts = np.array(cv2.boxPoints(r), dtype=np.int32)
             s = pts.sum(axis=1)
             tl = pts[np.argmin(s)]
             br = pts[np.argmax(s)]
